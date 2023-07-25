@@ -5,11 +5,10 @@ import {
   getAttributeName,
 } from "../CONSTANTS";
 import { Emitter } from "../utils/emitter";
-import log from "../utils/log";
+import log, { logEnabled } from "../utils/log";
 import assetStorage from "../../assets.hexa";
 
 export const SELECTOR = `component:not(component[${ATTRIBUTE_PREFIX}-asset-loading="false"]):not(component[${ATTRIBUTE_PREFIX}-asset-loading="true"])`;
-export const CSS_TAG_REGEX = /<import(.*?)from=(.*?)>([ \t]+)?<\/import>/g;
 export const HREF_TAG_REGEX = /<import(.*?)href=(.*?)>([ \t]+)?<\/import>/g;
 export const STYLE_REGEX = /<style(.*?)>(.|\n)*<\/style>/g;
 export const PROP_REGEX = /<props(.*?)path="(.*?)"(.*?)>([ \t]+)?<\/props>/g;
@@ -69,50 +68,12 @@ export function cssApplyer(html: string, assetID: string) {
 
       docuhead.appendChild(link);
 
-      console.group("components.css::" + assetID);
-      log("components.css", "apply", `Apply css for ${assetID}.`);
-      log("components.css", "url", cssTag);
-      console.groupEnd();
-    }
-
-  return html;
-}
-
-export function cssImporter(html: string, assetID: string) {
-  let cssTags = html.match(CSS_TAG_REGEX);
-
-  if (cssTags)
-    for (let i = 0; i < cssTags.length; i++) {
-      let cssTag = cssTags[i];
-      html = html.replace(cssTag, "");
-      cssTag = cssTag
-        .replace(/<import(.*?)from="/g, "")
-        .replace("</import>", "")
-        .replace(/"([ \t]+)?>([ \t]+)?/g, "")
-        .trim();
-
-      if (cssLoadSet.has(cssTag)) continue;
-      else cssLoadSet.add(cssTag);
-
-      let loadStartTime = new Date().getTime();
-
-      console.log("IMPORT!");
-
-      if (cssTag.startsWith("/")) cssTag = cssTag.slice(1);
-      import(/* @vite-ignore */ "./../../../" + cssTag).then(() => {
-        log(
-          "components.css",
-          "loaded",
-          `Applyed css for ${assetID} and took ${
-            new Date().getTime() - loadStartTime
-          }ms`
-        );
-      });
-
-      console.group("components.css::" + assetID);
-      log("components.css", "apply", `Apply css for ${assetID}.`);
-      log("components.css", "url", "/" + cssTag);
-      console.groupEnd();
+      if (logEnabled) {
+        console.group("components.css::" + assetID);
+        log("components.css", "apply", `Apply css for ${assetID}.`);
+        log("components.css", "url", cssTag);
+        console.groupEnd();
+      }
     }
 
   return html;
@@ -278,8 +239,8 @@ export async function getHTML(assetID: string) {
   } else res = await fetch(url);
   let data = await res.text();
 
-  htmlCache[assetID] = cssImporter(
-    styleApplyer(vitePatcher(cssApplyer(data, assetID)), assetID),
+  htmlCache[assetID] = styleApplyer(
+    vitePatcher(cssApplyer(data, assetID)),
     assetID
   );
   loadEmitter.emit(`load.${assetID}`);
