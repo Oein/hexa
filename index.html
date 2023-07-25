@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to Hexa!</title>
+  </head>
+  <body>
+    <div id="app">
+      <div>
+        <component
+          x-asset-id="logo"
+          x-const-props='{"image":"/images/htmlLogo.svg","link":"https://developer.mozilla.org/en-US/docs/Web/HTML"}'
+        ></component>
+        <component x-asset-id="title"></component>
+        <p class="read-the-docs">Click on the Hexa logo to learn more</p>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
